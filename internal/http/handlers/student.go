@@ -32,7 +32,6 @@ import (
 // 			return 
 // 		}
 
-
 // 		if err:=validator.New().Struct(student); err != nil {
 // 			validateErrs:= err.(validator.ValidationErrors)
 // 			response.WriteJSON(w, http.StatusBadRequest, response.ValidationError(validateErrs))
@@ -51,11 +50,11 @@ import (
 // 			return
 // 		}
 
-
 // 		slog.Info("student created successfully with-",slog.Int64("id", id))
 // 		response.WriteJSON(w, http.StatusCreated, map[string]int64{"id": id})	
 // 	}
 // }
+
 
 func New(storage storage.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
