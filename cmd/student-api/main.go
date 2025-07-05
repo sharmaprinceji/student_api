@@ -11,10 +11,11 @@ import (
 	"time"
 
 	"github.com/sharmaprinceji/student-api/internal/config"
+	"github.com/sharmaprinceji/student-api/internal/http/handlers"
 )
 
 func main(){
-	fmt.Println("Hello, Student API!")
+	// fmt.Println("Hello, Student API!")
 	//loadConfig()
 	cfg := config.MustLoad()
 	// database setup
@@ -22,18 +23,19 @@ func main(){
 	//setup router
 	router:=http.NewServeMux()
 
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-      w.Write([]byte("Welcome to Student API!"))
-	})
+	// router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+    //   w.Write([]byte("Welcome to Student server!"))
+	// })
+	router.HandleFunc("POST /api/student",Student.New())
 
-	//setup server..
+	//setup server.
 	server:= http.Server{
 		Addr:         cfg.HTTPServer.Addr,
 		Handler:      router,
 	}
 
 	slog.Info("Starting server...", slog.String("address", cfg.HTTPServer.Addr))
-    // fmt.Printf("Server is running on %s\n", cfg.HTTPServer.Addr)
+   
 	done := make(chan os.Signal, 1)
 
 	signal.Notify(done, os.Interrupt, syscall.SIGTERM, syscall.SIGINT);
