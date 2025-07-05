@@ -23,7 +23,7 @@ func New(cfg *config.Config) (*Sqlite, error) {
 		id INTEGER PRIMARY KEY AUTOINCREMENT,
 		name TEXT,
 		age INTEGER,
-		email TEXT,
+		email TEXT UNIQUE,
 		city Text
 	)`)
 
@@ -74,4 +74,71 @@ func (s *Sqlite) GetStudentById(id int64) (types.Student, error) {
 	}
 
 	return student, nil
+}
+
+func (s *Sqlite) GetAllStudents() ([]types.Student, error) {
+	stmt, err := s.Db.Prepare("SELECT * FROM students")
+	if err != nil {
+		return nil, err
+	}
+	defer stmt.Close()
+
+	rows, err := stmt.Query()
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var students []types.Student
+
+	for rows.Next() {
+		var student types.Student
+		err = rows.Scan(&student.ID, &student.Name, &student.Age, &student.Email, &student.City)
+		if err != nil {
+			return nil, fmt.Errorf("failed to scan student: %w", err)
+		}
+		students = append(students, student)
+	}
+
+	return students, nil
+}
+
+func (s *Sqlite) UpdateStudentById(id int64, name string, email string, age int, city string) (int64, error) {
+	stmt, err := s.Db.Prepare("UPDATE students SET name = ?, email = ?, age = ?, city = ? WHERE id = ?")
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+
+	res, err := stmt.Exec(name, email, age, city, id)
+	if err != nil {
+		return 0, err
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+
+	return rowsAffected, nil
+}
+
+func (s *Sqlite) DeleteStudent(id int64) (int64, error) {
+	stmt, err := s.Db.Prepare("DELETE FROM students WHERE id = ?")
+	if err != nil {
+		return 0, err
+	}
+	defer stmt.Close()
+
+	res, err := stmt.Exec(id)
+	if err != nil {
+		return 0, err
+	}
+
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return 0, err
+	}
+
+	return rowsAffected, nil
 }
