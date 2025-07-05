@@ -1,2 +1,7 @@
 
+go.work
+go work.sum
+
 .env
+storage
+/config
