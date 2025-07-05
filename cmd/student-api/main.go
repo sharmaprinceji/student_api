@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"log/slog"
 	"net/http"
 	"os"
@@ -12,6 +13,7 @@ import (
 
 	"github.com/sharmaprinceji/student-api/internal/config"
 	"github.com/sharmaprinceji/student-api/internal/http/handlers"
+	"github.com/sharmaprinceji/student-api/internal/storage/sqlite"
 )
 
 func main(){
@@ -19,6 +21,13 @@ func main(){
 	//loadConfig()
 	cfg := config.MustLoad()
 	// database setup
+	storage,er:=sqlite.New(cfg)
+
+	if er!=nil {
+		log.Fatal(er)
+	}
+
+	slog.Info("storage initialized", slog.String("env", cfg.Env), slog.String("version","1.0.0"))
 
 	//setup router
 	router:=http.NewServeMux()
@@ -26,7 +35,9 @@ func main(){
 	// router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
     //   w.Write([]byte("Welcome to Student server!"))
 	// })
-	router.HandleFunc("POST /api/student",Student.New())
+
+	router.HandleFunc("POST /api/student",Student.New(storage))
+	router.HandleFunc("GET /api/student/{id}",Student.GetById(storage)) 
 
 	//setup server.
 	server:= http.Server{
