@@ -18,6 +18,9 @@
 4. **Run the application**:
    ```
    go run cmd/student-api/main.go --config=config/local.yaml
+   
+   or
+   sudo go run cmd/student-api/main.go --config=config/local.yaml
    ```
 
 5. **Access the API**:
