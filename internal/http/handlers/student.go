@@ -6,9 +6,10 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"math"
 	"net/http"
-	 "strconv"
-	 "strings"
+	"strconv"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"github.com/sharmaprinceji/student-api/internal/storage"
@@ -29,13 +30,13 @@ import (
 
 // 		if err != nil {
 // 			response.WriteJSON(w, http.StatusBadRequest, response.GeneralError(fmt.Errorf("failed to decode request body: %v", err)))
-// 			return 
+// 			return
 // 		}
 
 // 		if err:=validator.New().Struct(student); err != nil {
 // 			validateErrs:= err.(validator.ValidationErrors)
 // 			response.WriteJSON(w, http.StatusBadRequest, response.ValidationError(validateErrs))
-// 			return 
+// 			return
 // 		}
 
 //         id,err:=storage.CreateStudent(
@@ -51,7 +52,7 @@ import (
 // 		}
 
 // 		slog.Info("student created successfully with-",slog.Int64("id", id))
-// 		response.WriteJSON(w, http.StatusCreated, map[string]int64{"id": id})	
+// 		response.WriteJSON(w, http.StatusCreated, map[string]int64{"id": id})
 // 	}
 // }
 
@@ -121,16 +122,41 @@ func GetById(storage storage.Storage) http.HandlerFunc {
 	}
 }
 
-func GetList(storage storage.Storage) http.HandlerFunc {
+func GetAll(storage storage.Storage) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		students, err := storage.GetAllStudents()
+		if err != nil {
+			response.WriteJSON(w, http.StatusInternalServerError, response.GeneralError(fmt.Errorf("failed to get students: %v", err)))
+			return
+		}
+		response.WriteJSON(w, http.StatusOK, students)
+	}
+}
 
+
+func GetListPagination(storage storage.Storage) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		pageStr := r.PathValue("page")
+		page, err := strconv.Atoi(pageStr)
+		if err != nil || page < 1 {
+			response.WriteJSON(w, http.StatusBadRequest, response.GeneralError(fmt.Errorf("invalid page number")))
+			return
+		}
+
+		const limit = 5
+		students, totalCount, err := storage.GetStudentsPaginated(page, limit)
 		if err != nil {
 			response.WriteJSON(w, http.StatusInternalServerError, response.GeneralError(fmt.Errorf("failed to get students: %v", err)))
 			return
 		}
 
-		response.WriteJSON(w, http.StatusOK, students)
+		totalPages := int(math.Ceil(float64(totalCount) / float64(limit)))
+
+		response.WriteJSON(w, http.StatusOK, map[string]interface{}{
+			"currentPage": page,
+			"totalPages":  totalPages,
+			"data":        students,
+		})
 	}
 }
 

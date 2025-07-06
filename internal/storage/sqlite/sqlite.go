@@ -103,6 +103,36 @@ func (s *Sqlite) GetAllStudents() ([]types.Student, error) {
 	return students, nil
 }
 
+func (s *Sqlite) GetStudentsPaginated(page int, limit int) ([]types.Student, int, error) {
+	offset := (page - 1) * limit
+
+	// Get paginated results
+	rows, err := s.Db.Query("SELECT id, name, age, email, city FROM students LIMIT ? OFFSET ?", limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer rows.Close()
+
+	var students []types.Student
+	for rows.Next() {
+		var student types.Student
+		err := rows.Scan(&student.ID, &student.Name, &student.Age, &student.Email, &student.City)
+		if err != nil {
+			return nil, 0, fmt.Errorf("failed to scan student: %w", err)
+		}
+		students = append(students, student)
+	}
+
+	// Get total count
+	var totalCount int
+	err = s.Db.QueryRow("SELECT COUNT(*) FROM students").Scan(&totalCount)
+	if err != nil {
+		return nil, 0, fmt.Errorf("failed to count students: %w", err)
+	}
+
+	return students, totalCount, nil
+}
+
 func (s *Sqlite) UpdateStudentById(id int64, name string, email string, age int, city string) (int64, error) {
 	stmt, err := s.Db.Prepare("UPDATE students SET name = ?, email = ?, age = ?, city = ? WHERE id = ?")
 	if err != nil {
