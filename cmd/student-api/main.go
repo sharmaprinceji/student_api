@@ -13,6 +13,7 @@ import (
 
 	"github.com/sharmaprinceji/student-api/internal/config"
 	"github.com/sharmaprinceji/student-api/internal/http/handlers"
+	scheduler "github.com/sharmaprinceji/student-api/internal/http/schedular"
 	"github.com/sharmaprinceji/student-api/internal/storage/sqlite"
 )
 
@@ -48,6 +49,9 @@ func main(){
 		Addr:         cfg.HTTPServer.Addr,
 		Handler:      router,
 	}
+
+	//StartCronJob
+	scheduler.StartCronJob()
 
 	slog.Info("Starting server...", slog.String("address", cfg.HTTPServer.Addr))
    
