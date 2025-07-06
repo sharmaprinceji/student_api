@@ -4,8 +4,10 @@ import (
 	"log"
 	"net/http"
 	"github.com/robfig/cron/v3"
+	"time"
 )
 
+//this schedular job run by using cron
 func StartCronJob() {
 	c := cron.New()
 
@@ -21,3 +23,21 @@ func StartCronJob() {
 
 	c.Start()
 }
+
+//this schedular job by using gorotines
+func StartStudentFetchJob() {
+	ticker := time.NewTicker(1 * time.Minute)
+
+	go func() {
+		for range ticker.C {
+			resp, err := http.Get("http://localhost:5001/api/students")
+			if err != nil {
+				log.Printf("Error fetching students: %v\n", err)
+				continue
+			}
+			log.Printf("Student fetch job ran. Status: %s\n", resp.Status)
+			resp.Body.Close()
+		}
+	}()
+}
+
